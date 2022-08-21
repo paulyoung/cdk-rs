@@ -13,18 +13,15 @@ use crate::{
     state_machine::{AssetDetails, EncodedAsset, State},
     types::*,
 };
-use candid::{candid_method, Principal};
+use candid::Principal;
 use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
-use ic_cdk_macros::{query, update};
 use std::cell::RefCell;
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
 }
 
-#[update]
-#[candid_method(update)]
-fn authorize(other: Principal) {
+pub fn authorize(other: Principal) {
     let caller = caller();
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().authorize(&caller, other) {
@@ -33,18 +30,14 @@ fn authorize(other: Principal) {
     })
 }
 
-#[query]
-#[candid_method(query)]
-fn retrieve(key: Key) -> RcBytes {
+pub fn retrieve(key: Key) -> RcBytes {
     STATE.with(|s| match s.borrow().retrieve(&key) {
         Ok(bytes) => bytes,
         Err(msg) => trap(&msg),
     })
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn store(arg: StoreArg) {
+pub fn store(arg: StoreArg) {
     STATE.with(move |s| {
         if let Err(msg) = s.borrow_mut().store(arg, time()) {
             trap(&msg);
@@ -53,26 +46,20 @@ fn store(arg: StoreArg) {
     });
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn create_batch() -> CreateBatchResponse {
+pub fn create_batch() -> CreateBatchResponse {
     STATE.with(|s| CreateBatchResponse {
         batch_id: s.borrow_mut().create_batch(time()),
     })
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn create_chunk(arg: CreateChunkArg) -> CreateChunkResponse {
+pub fn create_chunk(arg: CreateChunkArg) -> CreateChunkResponse {
     STATE.with(|s| match s.borrow_mut().create_chunk(arg, time()) {
         Ok(chunk_id) => CreateChunkResponse { chunk_id },
         Err(msg) => trap(&msg),
     })
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn create_asset(arg: CreateAssetArguments) {
+pub fn create_asset(arg: CreateAssetArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().create_asset(arg) {
             trap(&msg);
@@ -81,9 +68,7 @@ fn create_asset(arg: CreateAssetArguments) {
     })
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn set_asset_content(arg: SetAssetContentArguments) {
+pub fn set_asset_content(arg: SetAssetContentArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().set_asset_content(arg, time()) {
             trap(&msg);
@@ -92,9 +77,7 @@ fn set_asset_content(arg: SetAssetContentArguments) {
     })
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn unset_asset_content(arg: UnsetAssetContentArguments) {
+pub fn unset_asset_content(arg: UnsetAssetContentArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().unset_asset_content(arg) {
             trap(&msg);
@@ -103,27 +86,21 @@ fn unset_asset_content(arg: UnsetAssetContentArguments) {
     })
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn delete_asset(arg: DeleteAssetArguments) {
+pub fn delete_asset(arg: DeleteAssetArguments) {
     STATE.with(|s| {
         s.borrow_mut().delete_asset(arg);
         set_certified_data(&s.borrow().root_hash());
     });
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn clear() {
+pub fn clear() {
     STATE.with(|s| {
         s.borrow_mut().clear();
         set_certified_data(&s.borrow().root_hash());
     });
 }
 
-#[update(guard = "is_authorized")]
-#[candid_method(update)]
-fn commit_batch(arg: CommitBatchArguments) {
+pub fn commit_batch(arg: CommitBatchArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().commit_batch(arg, time()) {
             trap(&msg);
@@ -132,33 +109,25 @@ fn commit_batch(arg: CommitBatchArguments) {
     });
 }
 
-#[query]
-#[candid_method(query)]
-fn get(arg: GetArg) -> EncodedAsset {
+pub fn get(arg: GetArg) -> EncodedAsset {
     STATE.with(|s| match s.borrow().get(arg) {
         Ok(asset) => asset,
         Err(msg) => trap(&msg),
     })
 }
 
-#[query]
-#[candid_method(query)]
-fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
+pub fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
     STATE.with(|s| match s.borrow().get_chunk(arg) {
         Ok(content) => GetChunkResponse { content },
         Err(msg) => trap(&msg),
     })
 }
 
-#[query]
-#[candid_method(query)]
-fn list() -> Vec<AssetDetails> {
+pub fn list() -> Vec<AssetDetails> {
     STATE.with(|s| s.borrow().list_assets())
 }
 
-#[query]
-#[candid_method(query)]
-fn http_request(req: HttpRequest) -> HttpResponse {
+pub fn http_request(req: HttpRequest) -> HttpResponse {
     let certificate = data_certificate().unwrap_or_else(|| trap("no data certificate available"));
 
     STATE.with(|s| {
@@ -173,9 +142,7 @@ fn http_request(req: HttpRequest) -> HttpResponse {
     })
 }
 
-#[query]
-#[candid_method(query)]
-fn http_request_streaming_callback(token: StreamingCallbackToken) -> StreamingCallbackHttpResponse {
+pub fn http_request_streaming_callback(token: StreamingCallbackToken) -> StreamingCallbackHttpResponse {
     STATE.with(|s| {
         s.borrow()
             .http_request_streaming_callback(token)
@@ -183,7 +150,7 @@ fn http_request_streaming_callback(token: StreamingCallbackToken) -> StreamingCa
     })
 }
 
-fn is_authorized() -> Result<(), String> {
+pub fn is_authorized() -> Result<(), String> {
     STATE.with(|s| {
         s.borrow()
             .is_authorized(&caller())
