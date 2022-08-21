@@ -487,6 +487,7 @@ impl State {
                         headers: vec![("Location".to_string(), replacement_url)],
                         body: RcBytes::from(ByteBuf::default()),
                         streaming_strategy: None,
+                        upgrade: Some(false),
                     };
                 }
             }
@@ -504,6 +505,7 @@ impl State {
                                 name, err
                             ))),
                             streaming_strategy: None,
+                            upgrade: Some(false),
                         };
                     }
                 }
@@ -526,6 +528,7 @@ impl State {
                     path, err
                 ))),
                 streaming_strategy: None,
+                upgrade: Some(false),
             },
         }
     }
@@ -814,6 +817,7 @@ fn build_ok(
         headers,
         body,
         streaming_strategy,
+        upgrade: Some(false),
     }
 }
 
@@ -823,6 +827,7 @@ fn build_404(certificate_header: HeaderField) -> HttpResponse {
         headers: vec![certificate_header],
         body: RcBytes::from(ByteBuf::from("not found")),
         streaming_strategy: None,
+        upgrade: Some(false),
     }
 }
 
