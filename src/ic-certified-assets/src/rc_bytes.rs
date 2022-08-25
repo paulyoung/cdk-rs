@@ -3,6 +3,7 @@ use ic_cdk::export::candid::{
     types::{internal::Type, Serializer},
     CandidType, Deserialize,
 };
+use serde::Serialize;
 use serde::de::Deserializer;
 use serde_bytes::ByteBuf;
 use std::convert::AsRef;
@@ -22,6 +23,14 @@ impl CandidType for RcBytes {
         S: Serializer,
     {
         serializer.serialize_blob(&*self.0)
+    }
+}
+
+impl Serialize for RcBytes {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+        ByteBuf::serialize(&*self.0, serializer)
     }
 }
 

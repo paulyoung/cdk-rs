@@ -27,7 +27,7 @@ const INDEX_FILE: &str = "/index.html";
 type AssetHashes = RbTree<Key, Hash>;
 type Timestamp = Int;
 
-#[derive(Default, Clone, Debug, CandidType, Deserialize)]
+#[derive(Default, Clone, Debug, CandidType, Deserialize, Serialize)]
 pub struct AssetEncoding {
     pub modified: Timestamp,
     pub content_chunks: Vec<RcBytes>,
@@ -36,7 +36,7 @@ pub struct AssetEncoding {
     pub sha256: [u8; 32],
 }
 
-#[derive(Default, Clone, Debug, CandidType, Deserialize)]
+#[derive(Default, Clone, Debug, CandidType, Deserialize, Serialize)]
 pub struct Asset {
     pub content_type: String,
     pub encodings: HashMap<String, AssetEncoding>,
@@ -92,7 +92,7 @@ pub struct State {
     asset_hashes: AssetHashes,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
 pub struct StableState {
     authorized: Vec<Principal>,
     stable_assets: HashMap<String, Asset>,
